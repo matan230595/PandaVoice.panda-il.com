@@ -1,0 +1,138 @@
+רישיון שימוש - Pandavoice
+=====================================
+
+© 2026 מתן אלקיים - פנדה סוכנות דיגיטל
+כל הזכויות שמורות
+
+הגדרות:
+--------
+"המערכת" - תוכנת Pandavoice כולל כל רכיביה, קבציה וקוד המקור שלה
+"המשתמש" - כל אדם או ארגון המשתמש במערכת
+"המפתח" - פנדה סוכנות דיגיטל ומתן אלקיים
+
+תנאי השימוש:
+-------------
+
+1. מתן רישיון
+   המפתח מעניק למשתמש רישיון לא בלעדי, בלתי ניתן להעברה לשימוש במערכת
+   בהתאם לתנאים המפורטים במסמך זה.
+
+2. הגבלות שימוש
+   אין להעתיק, לשכפל, להפיץ או למכור את המערכת או חלקים ממנה
+   אין לבצע הנדסה לאחור, פירוק או דה-קומפילציה של המערכת
+   אין להסיר או לשנות הודעות זכויות יוצרים מהמערכת
+
+3. זכויות קניין רוחני
+   כל זכויות הקניין הרוחני במערכת הן של המפתח
+   השימוש במערכת אינו מעניק למשתמש זכויות קניין במערכת
+
+4. אחריות ושיפוי
+   המערכת מסופקת "כמות שהיא" ללא אחריות מכל סוג
+   המפתח לא יהיה אחראי לנזקים ישירים או עקיפים הנובעים משימוש במערכת
+   המשתמש מסכים לשפות את המפתח מכל תביעה או דרישה הנובעת משימושו במערכת
+
+5. הפרת תנאים
+   בעת הפרת תנאי הרישיון, הרישיון יבוטל באופן מיידי
+   המפתח שומר לעצמו את הזכות לנקוט בצעדים משפטיים במקרה של הפרה
+
+6. שינויים ברישיון
+   המפתח רשאי לשנות את תנאי הרישיון בכל עת
+   המשתמש יקבל הודעה על שינויים באמצעות המערכת
+
+7. חוק ושיפוט
+   רישיון זה כפוף לחוקי מדינת ישראל
+   סמכות השיפוט הבלעדית תהיה לבתי המשפט בישראל
+
+8. שירותי צד שלישי
+   המערכת משתמשת בשירותי AI מצדדים שלישיים (Google Gemini, Groq, OpenAI)
+   המשתמש אחראי להשגת מפתחות API ולעמידה בתנאי השימוש של ספקים אלו
+   המפתח אינו אחראי לשירותי צד שלישי או לעלויות הכרוכות בהם
+
+9. פרטיות ואבטחת מידע
+   המערכת שומרת מידע באופן מקומי בדפדפן המשתמש
+   המשתמש אחראי לשמירת מפתחות ה-API שלו במקום מאובטח
+   המפתח לא שומר או ניגש למידע אישי של המשתמש
+
+10. סיום השימוש
+    המשתמש רשאי להפסיק את השימוש במערכת בכל עת
+    בעת הפסקת השימוש, יש למחוק את כל העתקי המערכת
+    חובות ואחריות שנצברו לפני סיום השימוש ימשיכו לעמוד בתוקף
+
+ליצירת קשר:
+-----------
+פנדה סוכנות דיגיטל
+מתן אלקיים
+אימייל: support@panda.co.il
+טלפון: 050-1234567
+
+תאריך עדכון אחרון: 2026-01-01
+
+=====================================
+License Agreement - Pandavoice
+=====================================
+
+© 2026 Matan Elkayam - Panda Digital Agency
+All Rights Reserved
+
+Definitions:
+-----------
+"The System" - Pandavoice software including all its components, files and source code
+"The User" - any person or organization using the system
+"The Developer" - Panda Digital Agency and Matan Elkayam
+
+Terms of Use:
+------------
+
+1. Grant of License
+   The Developer grants the User a non-exclusive, non-transferable license to use
+   the System in accordance with the terms set forth in this document.
+
+2. Usage Restrictions
+   Do not copy, duplicate, distribute or sell the System or parts thereof
+   Do not reverse engineer, disassemble or decompile the System
+   Do not remove or modify copyright notices from the System
+
+3. Intellectual Property Rights
+   All intellectual property rights in the System belong to the Developer
+   Use of the System does not grant the User property rights in the System
+
+4. Warranty and Indemnification
+   The System is provided "as is" without warranty of any kind
+   The Developer shall not be liable for direct or indirect damages arising from use
+   The User agrees to indemnify the Developer from any claim arising from their use
+
+5. Breach of Terms
+   Upon breach of license terms, the license will be terminated immediately
+   The Developer reserves the right to take legal action in case of breach
+
+6. License Changes
+   The Developer may modify the license terms at any time
+   The User will be notified of changes through the System
+
+7. Governing Law and Jurisdiction
+   This license is subject to the laws of the State of Israel
+   Exclusive jurisdiction shall be with the courts of Israel
+
+8. Third-Party Services
+   The System uses third-party AI services (Google Gemini, Groq, OpenAI)
+   The User is responsible for obtaining API keys and complying with provider terms
+   The Developer is not responsible for third-party services or associated costs
+
+9. Privacy and Data Security
+   The System stores information locally in the User's browser
+   The User is responsible for keeping their API keys secure
+   The Developer does not store or access User's personal information
+
+10. Termination
+    The User may stop using the System at any time
+    Upon termination, all copies of the System must be deleted
+    Obligations and liabilities accrued before termination remain in effect
+
+Contact:
+--------
+Panda Digital Agency
+Matan Elkayam
+Email: support@panda.co.il
+Phone: 050-1234567
+
+Last Updated: 2026-01-01
