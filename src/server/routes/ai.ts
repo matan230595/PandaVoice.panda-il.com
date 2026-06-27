@@ -8,9 +8,25 @@ interface OpenAIResponse {
   choices: { message: { content: string } }[];
 }
 
+const rateMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string, limit = 20): boolean {
+  const now = Date.now();
+  const entry = rateMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateMap.set(ip, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  if (entry.count >= limit) return false;
+  entry.count++;
+  return true;
+}
+
 const app = new Hono();
 
 app.post('/ai', async (c) => {
+  const ip = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? 'unknown';
+  if (!checkRateLimit(ip)) return c.json({ error: 'יותר מדי בקשות, נסה שוב בעוד דקה' }, 429);
   try {
     const parsed = AIRequestSchema.safeParse(await c.req.json());
     if (!parsed.success) return c.json({ error: 'Missing required fields' }, 400);

@@ -18,6 +18,8 @@ app.post('/upload', async (c) => {
     const title = formData.get('title') as string | null;
 
     if (!audioFile) return c.json({ error: 'חסר קובץ אודיו' }, 400);
+    if (audioFile.size > 50 * 1024 * 1024) return c.json({ error: 'הקובץ גדול מדי (מקסימום 50MB)' }, 413);
+    if (!audioFile.type.startsWith('audio/')) return c.json({ error: 'יש להעלות קובץ אודיו בלבד' }, 415);
 
     const timestamp = Date.now();
     const filename = `${timestamp}-${audioFile.name}`;
