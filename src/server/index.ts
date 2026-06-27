@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { serve } from '@hono/node-server';
+import { serve, serveStatic } from '@hono/node-server';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -10,7 +10,7 @@ import recordingsRoutes from '@/server/routes/recordings';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-// dist/server/index.js → go up one level to reach dist/ (where Vite puts client files)
+// dist/server/index.js → dist/ is one level up; client files (index.html, assets/) live there
 const clientPath = join(__dirname, '..');
 
 initDB();
@@ -28,9 +28,11 @@ app.route('/api', aiRoutes);
 app.route('/api', translateRoutes);
 app.route('/api/recordings', recordingsRoutes);
 
-// Serve React SPA
+// Serve static assets (JS, CSS, images) from dist/
+app.use('/*', serveStatic({ root: clientPath }));
+
+// SPA fallback — serve index.html for all non-asset routes
 app.get('/*', async (c) => {
-  if (c.req.path.startsWith('/api')) return c.json({ error: 'Not found' }, 404);
   try {
     const html = readFileSync(join(clientPath, 'index.html'), 'utf-8');
     return c.html(html);
