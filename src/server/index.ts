@@ -10,6 +10,7 @@ import aiRoutes from '@/server/routes/ai';
 import translateRoutes from '@/server/routes/translate';
 import recordingsRoutes from '@/server/routes/recordings';
 import authRoutes from '@/server/routes/auth';
+import { requireAuth } from '@/server/middleware/auth';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -43,6 +44,7 @@ app.get('/api/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISO
 app.route('/api', authRoutes);
 app.route('/api', aiRoutes);
 app.route('/api', translateRoutes);
+app.use('/api/recordings/*', requireAuth);
 app.route('/api/recordings', recordingsRoutes);
 
 // Serve static assets (JS, CSS, images) from dist/

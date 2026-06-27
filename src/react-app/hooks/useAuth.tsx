@@ -10,22 +10,25 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isPending: boolean;
-  redirectToLogin: () => void;
-  exchangeCodeForSessionToken: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isPending: true,
-  redirectToLogin: () => {},
-  exchangeCodeForSessionToken: async () => {},
+  login: async () => {},
+  register: async () => {},
   logout: async () => {},
+  error: null,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isPending, setIsPending] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchUser = useCallback(async () => {
     try {
@@ -47,29 +50,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, [fetchUser]);
 
-  const redirectToLogin = useCallback(async () => {
-    try {
-      const res = await fetch('/api/oauth/google/redirect_url');
-      const data = await res.json();
-      if (data.redirectUrl) {
-        window.location.href = data.redirectUrl;
-      }
-    } catch (err) {
-      console.error('Failed to get redirect URL:', err);
+  const login = useCallback(async (email: string, password: string) => {
+    setError(null);
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'שגיאה בהתחברות');
     }
-  }, []);
+    await fetchUser();
+  }, [fetchUser]);
 
-  const exchangeCodeForSessionToken = useCallback(async () => {
+  const register = useCallback(async (email: string, password: string, name: string) => {
+    setError(null);
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password, name }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'שגיאה בהרשמה');
+    }
     await fetchUser();
   }, [fetchUser]);
 
   const logout = useCallback(async () => {
-    await fetch('/api/logout', { credentials: 'include' });
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isPending, redirectToLogin, exchangeCodeForSessionToken, logout }}>
+    <AuthContext.Provider value={{ user, isPending, login, register, logout, error }}>
       {children}
     </AuthContext.Provider>
   );

@@ -15,8 +15,6 @@ describe("useAppStore", () => {
         hf: "",
         openai: "",
         claude: "",
-        fbKey: "",
-        fbProj: "",
       },
       ttsSettings: {
         rate: 1,

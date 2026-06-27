@@ -38,8 +38,6 @@ interface AppState {
     hf: string;
     openai: string;
     claude: string;
-    fbKey: string;
-    fbProj: string;
   };
   ttsSettings: {
     rate: number;
@@ -143,9 +141,7 @@ export const useAppStore = create<AppState>()(
         groq: '',
         hf: '',
         openai: '',
-        claude: '',
-        fbKey: '',
-        fbProj: ''
+        claude: ''
       },
       ttsSettings: {
         rate: 1,

@@ -46,5 +46,9 @@ export function initDB() {
     );
   `);
 
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN password_hash TEXT`);
+  } catch {}
+
   console.log('Database ready:', dbPath);
 }

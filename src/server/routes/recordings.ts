@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
+import { getCookie } from 'hono/cookie';
 import { readFileSync, writeFileSync, unlinkSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { getDB } from '@/server/db';
+import type { Context } from 'hono';
 
 const app = new Hono();
 
@@ -11,7 +13,26 @@ function getAudioDir(): string {
   return dir;
 }
 
+function resolveUserId(c: Context): string | null {
+  const token = getCookie(c, 'session');
+  if (!token) return null;
+  try {
+    const row = getDB()
+      .prepare(
+        `SELECT u.id FROM sessions s JOIN users u ON s.user_id = u.id
+         WHERE s.token = ? AND s.expires_at > datetime('now')`
+      )
+      .get(token) as { id: string } | undefined;
+    return row?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 app.post('/upload', async (c) => {
+  const userId = resolveUserId(c);
+  if (!userId) return c.json({ error: 'לא מחובר' }, 401);
+
   try {
     const formData = await c.req.formData();
     const audioFile = formData.get('audio') as File | null;
@@ -30,16 +51,17 @@ app.post('/upload', async (c) => {
     writeFileSync(filepath, buffer);
 
     const db = getDB();
-    const stmt = db.prepare(
-      `INSERT INTO recordings (user_id, title, audio_key, file_size_bytes)
-       VALUES (?, ?, ?, ?)`
-    );
-    const result = stmt.run(
-      'local',
-      title || `הקלטה ${new Date().toLocaleDateString('he-IL')}`,
-      filename,
-      audioFile.size
-    );
+    const result = db
+      .prepare(
+        `INSERT INTO recordings (user_id, title, audio_key, file_size_bytes)
+         VALUES (?, ?, ?, ?)`
+      )
+      .run(
+        userId,
+        title || `הקלטה ${new Date().toLocaleDateString('he-IL')}`,
+        filename,
+        audioFile.size
+      );
 
     return c.json({ success: true, id: result.lastInsertRowid, key: filename });
   } catch (error) {
@@ -49,13 +71,16 @@ app.post('/upload', async (c) => {
 });
 
 app.get('/list', (c) => {
-  try {
-    const db = getDB();
-    const rows = db.prepare(
-      `SELECT id, title, audio_key, duration_seconds, file_size_bytes, created_at
-       FROM recordings WHERE user_id = ? ORDER BY created_at DESC`
-    ).all('local');
+  const userId = resolveUserId(c);
+  if (!userId) return c.json({ error: 'לא מחובר' }, 401);
 
+  try {
+    const rows = getDB()
+      .prepare(
+        `SELECT id, title, audio_key, duration_seconds, file_size_bytes, created_at
+         FROM recordings WHERE user_id = ? ORDER BY created_at DESC`
+      )
+      .all(userId);
     return c.json({ recordings: rows });
   } catch (error) {
     console.error('שגיאה בטעינת הקלטות:', error);
@@ -64,12 +89,14 @@ app.get('/list', (c) => {
 });
 
 app.get('/:id/audio', (c) => {
+  const userId = resolveUserId(c);
+  if (!userId) return c.json({ error: 'לא מחובר' }, 401);
+
   try {
     const id = c.req.param('id');
-    const db = getDB();
-    const recording = db.prepare(
-      `SELECT audio_key, title FROM recordings WHERE id = ? AND user_id = ?`
-    ).get(id, 'local') as { audio_key: string; title: string } | undefined;
+    const recording = getDB()
+      .prepare(`SELECT audio_key, title FROM recordings WHERE id = ? AND user_id = ?`)
+      .get(id, userId) as { audio_key: string; title: string } | undefined;
 
     if (!recording) return c.json({ error: 'ההקלטה לא נמצאה' }, 404);
 
@@ -90,19 +117,21 @@ app.get('/:id/audio', (c) => {
 });
 
 app.delete('/:id', (c) => {
+  const userId = resolveUserId(c);
+  if (!userId) return c.json({ error: 'לא מחובר' }, 401);
+
   try {
     const id = c.req.param('id');
-    const db = getDB();
-    const recording = db.prepare(
-      `SELECT audio_key FROM recordings WHERE id = ? AND user_id = ?`
-    ).get(id, 'local') as { audio_key: string } | undefined;
+    const recording = getDB()
+      .prepare(`SELECT audio_key FROM recordings WHERE id = ? AND user_id = ?`)
+      .get(id, userId) as { audio_key: string } | undefined;
 
     if (!recording) return c.json({ error: 'ההקלטה לא נמצאה' }, 404);
 
     const filepath = join(getAudioDir(), recording.audio_key);
     if (existsSync(filepath)) unlinkSync(filepath);
 
-    db.prepare(`DELETE FROM recordings WHERE id = ?`).run(id);
+    getDB().prepare(`DELETE FROM recordings WHERE id = ?`).run(id);
 
     return c.json({ success: true });
   } catch (error) {
