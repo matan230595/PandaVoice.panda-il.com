@@ -9,7 +9,9 @@ module.exports = {
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000
+        PORT: 3000,
+        DATA_DIR: '/home/matanadmin/web/dev.panda-il.com/public_html/data',
+        AUDIO_DIR: '/home/matanadmin/web/dev.panda-il.com/public_html/data/audio'
       },
       error_file: './logs/err.log',
       out_file: './logs/out.log',

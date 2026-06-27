@@ -4,6 +4,7 @@ import { useAppStore } from '@/react-app/store/useAppStore';
 import toast from 'react-hot-toast';
 
 const HISTORY_SIZE = 50;
+const isSpeechSupported = 'webkitSpeechRecognition' in window;
 
 export default function Editor() {
   const { config, content, setContent, isRecording, setRecording } = useAppStore();
@@ -304,12 +305,16 @@ export default function Editor() {
           )}
           <button
             onClick={handleRecord}
+            disabled={!isSpeechSupported}
+            title={isSpeechSupported ? 'הקלטה קולית' : 'זיהוי קולי נתמך רק ב-Chrome'}
             className={`relative w-[72px] h-[72px] rounded-full border-4 border-white dark:border-gray-800 shadow-2xl flex items-center justify-center transition-all ${
-              isRecording
+              !isSpeechSupported
+                ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                : isRecording
                 ? 'bg-red-500 scale-110 shadow-red-500/50'
                 : 'bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-700 dark:to-gray-800 hover:scale-105'
             }`}
-            aria-label="מיקרופון"
+            aria-label={isSpeechSupported ? 'מיקרופון' : 'זיהוי קולי לא נתמך בדפדפן זה'}
           >
             <Mic className="w-8 h-8 text-white" />
           </button>

@@ -38,7 +38,7 @@ export default function TranslateModal({ isOpen, onClose }: TranslateModalProps)
       return;
     }
 
-    if (!apiKeys.gemini && !apiKeys.groq) {
+    if (!apiKeys.gemini && !apiKeys.openai && !apiKeys.groq) {
       toast.error('נא להגדיר מפתח API בהגדרות');
       return;
     }
@@ -53,8 +53,8 @@ export default function TranslateModal({ isOpen, onClose }: TranslateModalProps)
           text: content,
           sourceLang: sourceLang === 'auto' ? 'auto' : sourceLang,
           targetLang,
-          apiKey: apiKeys.gemini || apiKeys.groq,
-          provider: apiKeys.gemini ? 'gemini' : 'groq',
+          apiKey: apiKeys.gemini || apiKeys.openai || apiKeys.groq,
+          provider: apiKeys.gemini ? 'gemini' : apiKeys.openai ? 'openai' : 'groq',
         }),
       });
 
@@ -147,7 +147,7 @@ export default function TranslateModal({ isOpen, onClose }: TranslateModalProps)
           )}
         </button>
 
-        {!apiKeys.gemini && !apiKeys.groq && (
+        {!apiKeys.gemini && !apiKeys.openai && !apiKeys.groq && (
           <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-700 rounded-xl">
             <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
               ⚠️ לא הוגדר מפתח API. עבור להגדרות להגדרת מפתח Gemini או Groq
