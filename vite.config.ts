@@ -2,13 +2,14 @@
 import path from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { cloudflare } from "@cloudflare/vite-plugin";
-import { mochaPlugins } from "@getmocha/vite-plugins";
 
 export default defineConfig({
-  plugins: [...mochaPlugins(process.env as Record<string, unknown>), react(), cloudflare()],
+  plugins: [react()],
   server: {
     allowedHosts: true,
+    proxy: {
+      '/api': 'http://localhost:3000',
+    },
   },
   build: {
     chunkSizeWarningLimit: 5000,

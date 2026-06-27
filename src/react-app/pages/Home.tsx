@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { useAuth } from '@getmocha/users-service/react';
+import { useAuth } from '@/react-app/hooks/useAuth';
 import { useAppStore } from '@/react-app/store/useAppStore';
 import Header from '@/react-app/components/Header';
 import Toolbar from '@/react-app/components/Toolbar';

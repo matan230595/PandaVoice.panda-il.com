@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { useAuth } from '@getmocha/users-service/react';
+import { useAuth } from '@/react-app/hooks/useAuth';
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();

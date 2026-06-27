@@ -15,10 +15,5 @@ export const TranslateRequestSchema = z.object({
   provider: z.enum(["gemini", "groq"]),
 });
 
-export const SessionRequestSchema = z.object({
-  code: z.string().min(1),
-});
-
 export type AIRequest = z.infer<typeof AIRequestSchema>;
 export type TranslateRequest = z.infer<typeof TranslateRequestSchema>;
-export type SessionRequest = z.infer<typeof SessionRequestSchema>;

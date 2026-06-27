@@ -1,5 +1,5 @@
 import { Moon, Sun, HelpCircle, Settings, Headphones, LogOut } from 'lucide-react';
-import { useAuth } from '@getmocha/users-service/react';
+import { useAuth } from '@/react-app/hooks/useAuth';
 import { useAppStore } from '@/react-app/store/useAppStore';
 
 interface HeaderProps {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Save, RefreshCw } from 'lucide-react';
-import { useAuth } from '@getmocha/users-service/react';
+import { useAuth } from '@/react-app/hooks/useAuth';
 import Modal from './Modal';
 import { useAppStore } from '@/react-app/store/useAppStore';
 import toast from 'react-hot-toast';
