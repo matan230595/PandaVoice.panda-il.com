@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
-import { serve, serveStatic } from '@hono/node-server';
+import { serve } from '@hono/node-server';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';

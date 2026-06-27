@@ -47,7 +47,7 @@ app.post('/translate', async (c) => {
 
     if (provider === 'gemini') {
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -67,6 +67,17 @@ app.post('/translate', async (c) => {
         signal: AbortSignal.timeout(30000),
       });
       if (!res.ok) throw new Error('Groq API error');
+      const data = await res.json() as OpenAIResponse;
+      translation = data.choices[0].message.content;
+
+    } else if (provider === 'openai') {
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: prompt }] }),
+        signal: AbortSignal.timeout(30000),
+      });
+      if (!res.ok) throw new Error('OpenAI API error');
       const data = await res.json() as OpenAIResponse;
       translation = data.choices[0].message.content;
     }

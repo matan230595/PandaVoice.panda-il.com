@@ -12,7 +12,7 @@ export const TranslateRequestSchema = z.object({
   sourceLang: z.string().min(1),
   targetLang: z.string().min(1),
   apiKey: z.string().min(1),
-  provider: z.enum(["gemini", "groq"]),
+  provider: z.enum(["gemini", "groq", "openai"]),
 });
 
 export type AIRequest = z.infer<typeof AIRequestSchema>;
