@@ -10,8 +10,8 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3000,
-        DATA_DIR: '/home/matanadmin/web/dev.panda-il.com/public_html/data',
-        AUDIO_DIR: '/home/matanadmin/web/dev.panda-il.com/public_html/data/audio'
+        DATA_DIR: '/opt/pandavoice/data',
+        AUDIO_DIR: '/opt/pandavoice/data/audio'
       },
       error_file: './logs/err.log',
       out_file: './logs/out.log',

@@ -36,7 +36,7 @@ readiness: 38/38 (100%)
 |-----|-----|
 | **GitHub** | לא זוהה (git לא מאותחל עם commits) |
 | **Vercel** | לא בשימוש — deployed על VPS |
-| **Production URL** | https://dev.panda-il.com |
+| **Production URL** | https://book.panda-il.online |
 | **Staging URL** | לא הוגדר |
 | **Dev URL** | http://localhost:5173 (Vite) / http://localhost:3000 (server) |
 | **Figma / עיצוב** | לא זוהה |

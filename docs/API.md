@@ -1,6 +1,6 @@
 # PandaVoice API Documentation
 
-Base URL: `https://dev.panda-il.com` (production) | `http://localhost:3000` (local)
+Base URL: `https://book.panda-il.online` (production) | `http://localhost:3000` (local)
 
 All protected routes require an active session cookie (`session`) obtained via login.
 
