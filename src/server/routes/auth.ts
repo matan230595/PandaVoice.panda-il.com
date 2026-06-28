@@ -112,4 +112,63 @@ app.post('/auth/logout', (c) => {
   return c.json({ ok: true });
 });
 
+const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
+
+app.get('/auth/google', (c) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) return c.json({ error: 'Google OAuth not configured' }, 503);
+
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI ?? 'https://voice.panda-il.online/api/auth/google/callback';
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: 'openid email profile',
+    access_type: 'online',
+  });
+  return c.redirect(`${GOOGLE_AUTH_URL}?${params}`);
+});
+
+app.get('/auth/google/callback', async (c) => {
+  const code = c.req.query('code');
+  if (!code) return c.redirect('/?error=oauth_failed');
+
+  const clientId = process.env.GOOGLE_CLIENT_ID!;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI ?? 'https://voice.panda-il.online/api/auth/google/callback';
+
+  try {
+    const tokenRes = await fetch(GOOGLE_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri, grant_type: 'authorization_code' }),
+    });
+    if (!tokenRes.ok) return c.redirect('/?error=oauth_failed');
+    const { access_token } = await tokenRes.json() as { access_token: string };
+
+    const userRes = await fetch(GOOGLE_USERINFO_URL, { headers: { Authorization: `Bearer ${access_token}` } });
+    if (!userRes.ok) return c.redirect('/?error=oauth_failed');
+    const gu = await userRes.json() as { email: string; name: string };
+
+    const email = gu.email.toLowerCase();
+    const db = getDB();
+    let user = db.prepare(`SELECT id, email, name FROM users WHERE email = ?`).get(email) as { id: string; email: string; name: string } | undefined;
+
+    if (!user) {
+      const id = randomUUID();
+      const displayName = gu.name || email.split('@')[0];
+      db.prepare(`INSERT INTO users (id, email, name, password_hash) VALUES (?, ?, ?, NULL)`).run(id, email, displayName);
+      user = { id, email, name: displayName };
+    }
+
+    db.prepare(`DELETE FROM sessions WHERE user_id = ?`).run(user.id);
+    createSession(user.id, c);
+    return c.redirect('/');
+  } catch {
+    return c.redirect('/?error=oauth_failed');
+  }
+});
+
 export default app;
