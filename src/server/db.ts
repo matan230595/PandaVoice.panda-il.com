@@ -50,5 +50,11 @@ export function initDB() {
     db.exec(`ALTER TABLE users ADD COLUMN password_hash TEXT`);
   } catch {}
 
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+    CREATE INDEX IF NOT EXISTS idx_recordings_user_id ON recordings(user_id);
+  `);
+
   console.log('Database ready:', dbPath);
 }

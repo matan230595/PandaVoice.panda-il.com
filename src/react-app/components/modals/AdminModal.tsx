@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ConfirmModal from './ConfirmModal';
 import { Save, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/react-app/hooks/useAuth';
 import Modal from './Modal';
@@ -34,15 +35,19 @@ export default function AdminModal({ isOpen, onClose }: AdminModalProps) {
     onClose();
   };
 
-  const handleReset = () => {
-    if (confirm('האם למחוק את כל ההגדרות ולחזור לברירת מחדל?')) {
-      resetConfig();
-      toast.success('ההגדרות אופסו');
-      onClose();
-    }
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const handleReset = () => setShowResetConfirm(true);
+
+  const doReset = () => {
+    resetConfig();
+    toast.success('ההגדרות אופסו');
+    setShowResetConfirm(false);
+    onClose();
   };
 
   return (
+    <>
     <Modal isOpen={isOpen} onClose={onClose} title="🐼 ניהול מערכת" size="lg">
       {!isAdmin ? (
         <div className="p-8 text-center">
@@ -207,5 +212,14 @@ export default function AdminModal({ isOpen, onClose }: AdminModalProps) {
         </div>
       )}
     </Modal>
+
+    <ConfirmModal
+      isOpen={showResetConfirm}
+      onClose={() => setShowResetConfirm(false)}
+      onConfirm={doReset}
+      title="איפוס הגדרות"
+      message="האם למחוק את כל ההגדרות ולחזור לברירת מחדל?"
+    />
+    </>
   );
 }

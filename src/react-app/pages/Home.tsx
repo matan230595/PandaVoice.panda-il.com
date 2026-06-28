@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from '@/react-app/hooks/useAuth';
 import { useAppStore } from '@/react-app/store/useAppStore';
@@ -7,16 +7,18 @@ import Toolbar from '@/react-app/components/Toolbar';
 import Editor from '@/react-app/components/Editor';
 import Footer from '@/react-app/components/Footer';
 import ConfirmModal from '@/react-app/components/modals/ConfirmModal';
-import AIModal from '@/react-app/components/modals/AIModal';
-import TranslateModal from '@/react-app/components/modals/TranslateModal';
-import TTSModal from '@/react-app/components/modals/TTSModal';
-import SettingsModal from '@/react-app/components/modals/SettingsModal';
-import HelpModal from '@/react-app/components/modals/HelpModal';
-import LegalModal from '@/react-app/components/modals/LegalModal';
-import ContactModal from '@/react-app/components/modals/ContactModal';
-import AdminModal from '@/react-app/components/modals/AdminModal';
-import RecordingsModal from '@/react-app/components/RecordingsModal';
 import LoginModal from '@/react-app/components/modals/LoginModal';
+
+// Heavy modals — loaded on first open
+const AIModal = lazy(() => import('@/react-app/components/modals/AIModal'));
+const TranslateModal = lazy(() => import('@/react-app/components/modals/TranslateModal'));
+const TTSModal = lazy(() => import('@/react-app/components/modals/TTSModal'));
+const SettingsModal = lazy(() => import('@/react-app/components/modals/SettingsModal'));
+const HelpModal = lazy(() => import('@/react-app/components/modals/HelpModal'));
+const LegalModal = lazy(() => import('@/react-app/components/modals/LegalModal'));
+const ContactModal = lazy(() => import('@/react-app/components/modals/ContactModal'));
+const AdminModal = lazy(() => import('@/react-app/components/modals/AdminModal'));
+const RecordingsModal = lazy(() => import('@/react-app/components/RecordingsModal'));
 
 export default function Home() {
   const { user, isPending } = useAuth();
@@ -109,53 +111,19 @@ export default function Home() {
         message="פעולה זו תמחק את הטקסט הנוכחי."
       />
 
-      <AIModal
-        isOpen={showAIModal}
-        onClose={() => setShowAIModal(false)}
-      />
-
-      <TranslateModal
-        isOpen={showTranslateModal}
-        onClose={() => setShowTranslateModal(false)}
-      />
-
-      <TTSModal
-        isOpen={showTTSModal}
-        onClose={() => setShowTTSModal(false)}
-      />
-
-      <SettingsModal
-        isOpen={showSettingsModal}
-        onClose={() => setShowSettingsModal(false)}
-      />
-
-      <HelpModal
-        isOpen={showHelpModal}
-        onClose={() => setShowHelpModal(false)}
-      />
-
-      <LegalModal
-        isOpen={showLegalModal}
-        onClose={() => setShowLegalModal(false)}
-        type={legalType}
-      />
-
-      <ContactModal
-        isOpen={showContactModal}
-        onClose={() => setShowContactModal(false)}
-      />
-
-      <AdminModal
-        isOpen={showAdminModal}
-        onClose={() => setShowAdminModal(false)}
-      />
-
-      <RecordingsModal
-        isOpen={showRecordingsModal}
-        onClose={() => setShowRecordingsModal(false)}
-      />
-
       <LoginModal isOpen={!isPending && !user} />
+
+      <Suspense fallback={null}>
+        <AIModal isOpen={showAIModal} onClose={() => setShowAIModal(false)} />
+        <TranslateModal isOpen={showTranslateModal} onClose={() => setShowTranslateModal(false)} />
+        <TTSModal isOpen={showTTSModal} onClose={() => setShowTTSModal(false)} />
+        <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+        <HelpModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
+        <LegalModal isOpen={showLegalModal} onClose={() => setShowLegalModal(false)} type={legalType} />
+        <ContactModal isOpen={showContactModal} onClose={() => setShowContactModal(false)} />
+        <AdminModal isOpen={showAdminModal} onClose={() => setShowAdminModal(false)} />
+        <RecordingsModal isOpen={showRecordingsModal} onClose={() => setShowRecordingsModal(false)} />
+      </Suspense>
     </div>
   );
 }

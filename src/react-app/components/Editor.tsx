@@ -185,6 +185,7 @@ export default function Editor() {
           const response = await fetch('/api/recordings/upload', {
             method: 'POST',
             body: formData,
+            credentials: 'include',
           });
 
           if (response.ok) {
@@ -267,7 +268,7 @@ export default function Editor() {
         </div>
         <span className="text-emerald-500 font-bold flex items-center gap-1">
           <Save className="w-3 h-3" />
-          נשמר בענן
+          נשמר
         </span>
       </div>
 

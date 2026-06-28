@@ -26,22 +26,41 @@ jobs:
       - name: Tests
         run: npm run test:run
 
-      - name: Build
-        run: npm run build
+      - name: Build frontend
+        run: npm run build:client
 
-      - name: Deploy Cloudflare Worker
-        run: npx wrangler deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      - name: Build server
+        run: npm run build:server
 
       - name: Deploy frontend to VPS
         uses: burnett01/rsync-deployments@7.0.1
         with:
           switches: -avz --delete
-          path: dist/
+          path: dist/client/
           remote_path: ${{ secrets.VPS_DIST_PATH }}
           remote_host: ${{ secrets.VPS_HOST }}
           remote_port: ${{ secrets.VPS_PORT }}
           remote_user: ${{ secrets.VPS_USER }}
           remote_key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Deploy server to VPS
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avz
+          path: dist/server/
+          remote_path: ${{ secrets.VPS_SERVER_DIST_PATH }}
+          remote_host: ${{ secrets.VPS_HOST }}
+          remote_port: ${{ secrets.VPS_PORT }}
+          remote_user: ${{ secrets.VPS_USER }}
+          remote_key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Restart server on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          port: ${{ secrets.VPS_PORT }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /home/matanadmin/web/dev.panda-il.com/public_html
+            npm run pm2:restart || pm2 restart pandavoice

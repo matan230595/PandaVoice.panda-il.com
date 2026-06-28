@@ -48,6 +48,7 @@ export default function TranslateModal({ isOpen, onClose }: TranslateModalProps)
     try {
       const response = await fetch('/api/translate', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: content,

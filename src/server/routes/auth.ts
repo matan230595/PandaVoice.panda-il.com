@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { setCookie, deleteCookie, getCookie } from 'hono/cookie';
 import { scryptSync, randomBytes, timingSafeEqual, randomUUID } from 'crypto';
 import { getDB } from '@/server/db';
+import { checkLoginRateLimit, getClientIp } from '@/server/middleware/rateLimit';
 
 const app = new Hono();
 
@@ -22,9 +23,7 @@ function verifyPassword(password: string, stored: string): boolean {
 
 function createSession(userId: string, c: Parameters<typeof setCookie>[0]): void {
   const token = randomBytes(32).toString('hex');
-  const expiresAt = new Date(
-    Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000
-  ).toISOString();
+  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
   getDB()
     .prepare(`INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)`)
@@ -33,7 +32,7 @@ function createSession(userId: string, c: Parameters<typeof setCookie>[0]): void
   setCookie(c, 'session', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Lax',
+    sameSite: 'Strict',
     maxAge: SESSION_DAYS * 24 * 60 * 60,
     path: '/',
   });
@@ -47,34 +46,27 @@ app.post('/auth/register', async (c) => {
     return c.json({ error: 'גוף הבקשה אינו תקין' }, 400);
   }
 
-  const { email, password, name } = body;
+  const rawEmail = body.email;
+  const { password, name } = body;
+  const email = rawEmail?.toLowerCase().trim();
 
-  if (!email || !password) {
-    return c.json({ error: 'אימייל וסיסמה הם שדות חובה' }, 400);
-  }
-  if (password.length < 6) {
-    return c.json({ error: 'הסיסמה חייבת להכיל לפחות 6 תווים' }, 400);
-  }
+  if (!email || !password) return c.json({ error: 'אימייל וסיסמה הם שדות חובה' }, 400);
+  if (password.length < 8) return c.json({ error: 'הסיסמה חייבת להכיל לפחות 8 תווים' }, 400);
+  if (password.length > 128) return c.json({ error: 'הסיסמה ארוכה מדי' }, 400);
 
   const db = getDB();
   const existing = db.prepare(`SELECT id FROM users WHERE email = ?`).get(email);
-  if (existing) {
-    return c.json({ error: 'כתובת האימייל כבר רשומה במערכת' }, 409);
-  }
+  if (existing) return c.json({ error: 'כתובת האימייל כבר רשומה במערכת' }, 409);
 
   const id = randomUUID();
   const passwordHash = hashPassword(password);
-  const displayName = name || email.split('@')[0];
+  const displayName = name?.trim() || email.split('@')[0];
 
-  db.prepare(
-    `INSERT INTO users (id, email, name, password_hash) VALUES (?, ?, ?, ?)`
-  ).run(id, email, displayName, passwordHash);
-
-  // Delete any stale sessions (shouldn't exist for new user, but be safe)
+  db.prepare(`INSERT INTO users (id, email, name, password_hash) VALUES (?, ?, ?, ?)`)
+    .run(id, email, displayName, passwordHash);
   db.prepare(`DELETE FROM sessions WHERE user_id = ?`).run(id);
 
   createSession(id, c);
-
   return c.json({ id, email, name: displayName }, 201);
 });
 
@@ -86,10 +78,15 @@ app.post('/auth/login', async (c) => {
     return c.json({ error: 'גוף הבקשה אינו תקין' }, 400);
   }
 
-  const { email, password } = body;
+  const rawEmail = body.email;
+  const { password } = body;
+  const email = rawEmail?.toLowerCase().trim();
 
-  if (!email || !password) {
-    return c.json({ error: 'אימייל וסיסמה הם שדות חובה' }, 400);
+  if (!email || !password) return c.json({ error: 'אימייל וסיסמה הם שדות חובה' }, 400);
+
+  const ip = getClientIp(c.req.raw.headers);
+  if (!checkLoginRateLimit(email, ip)) {
+    return c.json({ error: 'יותר מדי ניסיונות כניסה, נסה שוב בעוד 15 דקות' }, 429);
   }
 
   const db = getDB();
@@ -101,20 +98,15 @@ app.post('/auth/login', async (c) => {
     return c.json({ error: 'אימייל או סיסמה שגויים' }, 401);
   }
 
-  // Delete old sessions before creating new one
   db.prepare(`DELETE FROM sessions WHERE user_id = ?`).run(user.id);
-
   createSession(user.id, c);
-
   return c.json({ id: user.id, email: user.email, name: user.name });
 });
 
 app.post('/auth/logout', (c) => {
   const token = getCookie(c, 'session');
   if (token) {
-    try {
-      getDB().prepare(`DELETE FROM sessions WHERE token = ?`).run(token);
-    } catch {}
+    try { getDB().prepare(`DELETE FROM sessions WHERE token = ?`).run(token); } catch {}
   }
   deleteCookie(c, 'session', { path: '/' });
   return c.json({ ok: true });

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { AIRequestSchema } from '@/shared/types';
+import { checkRateLimit, getClientIp } from '@/server/middleware/rateLimit';
 
 interface GeminiResponse {
   candidates: { content: { parts: { text: string }[] } }[];
@@ -8,24 +9,10 @@ interface OpenAIResponse {
   choices: { message: { content: string } }[];
 }
 
-const rateMap = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string, limit = 20): boolean {
-  const now = Date.now();
-  const entry = rateMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateMap.set(ip, { count: 1, resetAt: now + 60_000 });
-    return true;
-  }
-  if (entry.count >= limit) return false;
-  entry.count++;
-  return true;
-}
-
 const app = new Hono();
 
 app.post('/ai', async (c) => {
-  const ip = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? 'unknown';
+  const ip = getClientIp(c.req.raw.headers);
   if (!checkRateLimit(ip)) return c.json({ error: 'יותר מדי בקשות, נסה שוב בעוד דקה' }, 429);
   try {
     const parsed = AIRequestSchema.safeParse(await c.req.json());
@@ -36,10 +23,10 @@ app.post('/ai', async (c) => {
 
     if (provider === 'gemini') {
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
           body: JSON.stringify({ contents: [{ parts: [{ text: `${prompt}\n\nטקסט:\n${text}` }] }] }),
           signal: AbortSignal.timeout(30000),
         }

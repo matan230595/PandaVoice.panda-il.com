@@ -33,7 +33,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
             <li>✨ עיבוד טקסט חכם עם AI (תיקון, שיפור, סיכום)</li>
             <li>🌐 תרגום ל-8 שפות שונות</li>
             <li>🔊 הקראת טקסט בקולות שונים</li>
-            <li>💾 שמירה אוטומטית בענן</li>
+            <li>💾 שמירה אוטומטית בשרת</li>
             <li>📱 שיתוף לווטסאפ וטלגרם</li>
           </ul>
         </div>

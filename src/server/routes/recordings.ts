@@ -1,11 +1,10 @@
 import { Hono } from 'hono';
-import { getCookie } from 'hono/cookie';
 import { readFileSync, writeFileSync, unlinkSync, existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { join, basename, resolve } from 'path';
 import { getDB } from '@/server/db';
-import type { Context } from 'hono';
+import type { AppVariables } from '@/server/types';
 
-const app = new Hono();
+const app = new Hono<AppVariables>();
 
 function getAudioDir(): string {
   const dir = process.env.AUDIO_DIR || join(process.cwd(), 'data', 'audio');
@@ -13,25 +12,12 @@ function getAudioDir(): string {
   return dir;
 }
 
-function resolveUserId(c: Context): string | null {
-  const token = getCookie(c, 'session');
-  if (!token) return null;
-  try {
-    const row = getDB()
-      .prepare(
-        `SELECT u.id FROM sessions s JOIN users u ON s.user_id = u.id
-         WHERE s.token = ? AND s.expires_at > datetime('now')`
-      )
-      .get(token) as { id: string } | undefined;
-    return row?.id ?? null;
-  } catch {
-    return null;
-  }
+function safeFilename(original: string): string {
+  return basename(original).replace(/[^a-zA-Z0-9._-]/g, '_');
 }
 
 app.post('/upload', async (c) => {
-  const userId = resolveUserId(c);
-  if (!userId) return c.json({ error: 'לא מחובר' }, 401);
+  const user = c.get('user') as { id: string };
 
   try {
     const formData = await c.req.formData();
@@ -43,9 +29,13 @@ app.post('/upload', async (c) => {
     if (!audioFile.type.startsWith('audio/')) return c.json({ error: 'יש להעלות קובץ אודיו בלבד' }, 415);
 
     const timestamp = Date.now();
-    const filename = `${timestamp}-${audioFile.name}`;
+    const filename = `${timestamp}-${safeFilename(audioFile.name)}`;
     const audioDir = getAudioDir();
-    const filepath = join(audioDir, filename);
+    const filepath = resolve(join(audioDir, filename));
+
+    if (!filepath.startsWith(resolve(audioDir))) {
+      return c.json({ error: 'שם קובץ לא תקין' }, 400);
+    }
 
     const buffer = Buffer.from(await audioFile.arrayBuffer());
     writeFileSync(filepath, buffer);
@@ -57,7 +47,7 @@ app.post('/upload', async (c) => {
          VALUES (?, ?, ?, ?)`
       )
       .run(
-        userId,
+        user.id,
         title || `הקלטה ${new Date().toLocaleDateString('he-IL')}`,
         filename,
         audioFile.size
@@ -71,8 +61,7 @@ app.post('/upload', async (c) => {
 });
 
 app.get('/list', (c) => {
-  const userId = resolveUserId(c);
-  if (!userId) return c.json({ error: 'לא מחובר' }, 401);
+  const user = c.get('user') as { id: string };
 
   try {
     const rows = getDB()
@@ -80,7 +69,7 @@ app.get('/list', (c) => {
         `SELECT id, title, audio_key, duration_seconds, file_size_bytes, created_at
          FROM recordings WHERE user_id = ? ORDER BY created_at DESC`
       )
-      .all(userId);
+      .all(user.id);
     return c.json({ recordings: rows });
   } catch (error) {
     console.error('שגיאה בטעינת הקלטות:', error);
@@ -89,25 +78,30 @@ app.get('/list', (c) => {
 });
 
 app.get('/:id/audio', (c) => {
-  const userId = resolveUserId(c);
-  if (!userId) return c.json({ error: 'לא מחובר' }, 401);
+  const user = c.get('user') as { id: string };
 
   try {
     const id = c.req.param('id');
     const recording = getDB()
       .prepare(`SELECT audio_key, title FROM recordings WHERE id = ? AND user_id = ?`)
-      .get(id, userId) as { audio_key: string; title: string } | undefined;
+      .get(id, user.id) as { audio_key: string; title: string } | undefined;
 
     if (!recording) return c.json({ error: 'ההקלטה לא נמצאה' }, 404);
 
-    const filepath = join(getAudioDir(), recording.audio_key);
+    const audioDir = getAudioDir();
+    const filepath = resolve(join(audioDir, safeFilename(recording.audio_key)));
+
+    if (!filepath.startsWith(resolve(audioDir))) {
+      return c.json({ error: 'שגיאת גישה לקובץ' }, 400);
+    }
+
     if (!existsSync(filepath)) return c.json({ error: 'קובץ האודיו לא נמצא' }, 404);
 
     const buffer = readFileSync(filepath);
     return new Response(buffer, {
       headers: {
         'Content-Type': 'audio/webm',
-        'Content-Disposition': `attachment; filename="${recording.title}.webm"`,
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(recording.title)}.webm"`,
       },
     });
   } catch (error) {
@@ -117,19 +111,22 @@ app.get('/:id/audio', (c) => {
 });
 
 app.delete('/:id', (c) => {
-  const userId = resolveUserId(c);
-  if (!userId) return c.json({ error: 'לא מחובר' }, 401);
+  const user = c.get('user') as { id: string };
 
   try {
     const id = c.req.param('id');
     const recording = getDB()
       .prepare(`SELECT audio_key FROM recordings WHERE id = ? AND user_id = ?`)
-      .get(id, userId) as { audio_key: string } | undefined;
+      .get(id, user.id) as { audio_key: string } | undefined;
 
     if (!recording) return c.json({ error: 'ההקלטה לא נמצאה' }, 404);
 
-    const filepath = join(getAudioDir(), recording.audio_key);
-    if (existsSync(filepath)) unlinkSync(filepath);
+    const audioDir = getAudioDir();
+    const filepath = resolve(join(audioDir, safeFilename(recording.audio_key)));
+
+    if (filepath.startsWith(resolve(audioDir)) && existsSync(filepath)) {
+      unlinkSync(filepath);
+    }
 
     getDB().prepare(`DELETE FROM recordings WHERE id = ?`).run(id);
 

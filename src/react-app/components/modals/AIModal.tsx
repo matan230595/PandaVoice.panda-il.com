@@ -45,6 +45,7 @@ export default function AIModal({ isOpen, onClose }: AIModalProps) {
     try {
       const response = await fetch('/api/ai', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: aiPrompt,

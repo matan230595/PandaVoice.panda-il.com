@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import Modal from './Modal';
 import { useAppStore } from '@/react-app/store/useAppStore';
 
@@ -24,9 +25,9 @@ export default function LegalModal({ isOpen, onClose, type }: LegalModalProps) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={titles[type]} size="lg">
-      <div 
+      <div
         className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300"
-        dangerouslySetInnerHTML={{ __html: content[type] }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content[type]) }}
       />
     </Modal>
   );
